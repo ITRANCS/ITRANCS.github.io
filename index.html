@@ -766,7 +766,7 @@
 						var realind = parseInt(Number(ind)/50);
 						realind = realind.toString();
 						//console.log(realind)
-						let text = load("dataset/ip2geo/"+realind+".txt");
+						let text = load(realind+".txt");
 						var lines = text.split("\n")
 						var lat = -1;
 						var lng = -1;
@@ -1667,7 +1667,7 @@
 							
 							for (var i=0;i<3;i++)
 							{
-								text = load("dataset/dependence/stv"+(i+1).toString()+".json");
+								text = load("stv"+(i+1).toString()+".json");
 								var stv = JSON.parse(text);
 								if(stv.hasOwnProperty(key))
 								{
