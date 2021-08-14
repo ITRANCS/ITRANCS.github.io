@@ -733,13 +733,101 @@
 				    xhr.send(null);
 				    return xhr.status === okStatus ? xhr.responseText : null;
 				}
-				 
-				
+				function checkIP(value){
+				    var exp=/^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/;
+				    var reg = value.match(exp);
+				    if(reg==null)
+				    {
+				    	return false;
+				    }
+				    else
+				    {
+				    	return true;
+				    }
+				} 
+				function checkASN(value)
+				{
+					if(value.slice(0,2) == "AS")
+					{
+						return true;
+					}
+					else
+					{
+						return false;
+					}
+				}
 				function search(){
 					document.getElementById("searchbarDialog").close();
 					var name=document.getElementById('text');
-					let text = load("test.txt");
-					console.log(text);
+					var data = name.value;
+					if(checkIP(data))
+					{
+						var ind = data.split('.')[0];
+						var realind = parseInt(Number(ind)/50);
+						realind = realind.toString();
+						//console.log(realind)
+						let text = load("dataset/ip2geo/"+realind+".txt");
+						var lines = text.split("\n")
+						var lat = -1;
+						var lng = -1;
+						for (var i = 0 ; i < lines.length ; i++)
+						{
+							var parts = lines[i].split(',');
+							var prefix = parts[0];
+							var ps0 = prefix.split('/')
+							var ps = ps0[0].split('.')
+							if(ps[0] != ind)
+							{
+								continue;
+							}
+							var low = parseInt(ps[0])*256*256*256+parseInt(ps[1])*256*256+parseInt(ps[2])*256+parseInt(ps[3]);
+							var high = low + Math.pow(2,32-parseInt(ps0[1]));
+							var ps2 = data.split('.')
+							var val = parseInt(ps2[0])*256*256*256+parseInt(ps2[1])*256*256+parseInt(ps2[2])*256+parseInt(ps2[3]);
+							if (val >= low & val < high)
+							{
+								lat = parts[7];
+								lng = parts[8];
+								break;
+							}
+						}
+						if (lat != -1 & lng != -1)
+						{
+							var popup = new mapboxgl.Popup({ offset: 25 }).setText(data);
+							var marker = new mapboxgl.Marker()
+								.setLngLat([lng, lat])
+								.setPopup(popup)
+								.addTo(map);
+							map.flyTo({center:[lng, lat],zoom:11})
+						}
+					}
+					else if (checkASN(data))
+					{
+						var asn = data.slice(2);
+						let text = load("dataset/as2geo/as2geo-2021.json");
+						var as2geo = JSON.parse(text);
+						var colors = new Array("#83AF9B","#FE4365","#F4D000","#65934A","#1E293D","#4E1D4C","#3FB1CE");
+	                	col = colors[randomNum(0,6)];
+						if (as2geo.hasOwnProperty(asn))
+						{
+							for(var k in as2geo[asn])
+	                		{
+	                			var popup = new mapboxgl.Popup({ offset: 25 }).setText(
+									name.value+': '+as2geo[asn][k][2].toString()+' IP address'
+									);
+	                			var marker = new mapboxgl.Marker({color:col})
+								  .setLngLat([as2geo[asn][k][1], as2geo[asn][k][0]])
+								  .setPopup(popup)
+								  .addTo(map);
+	                		}
+						}
+						console.log(as2geo["13335"]);
+					}
+					else
+					{
+						alert("输入非法！")
+					}
+					/*
 					$.ajax({
 	                url: 'http://127.0.0.1:5000/search',
 	                data:{
@@ -779,6 +867,7 @@
 	                	}
 	                }
 	                });
+	                */
 				}
 				var isPlay = true
 				var steps = 0
@@ -1050,8 +1139,8 @@
 					document.getElementById("routeDialog").close();
 					var src=document.getElementById('src');
 					var des=document.getElementById('des');
-
-					getroute(src.value,des.value,'2021')
+					alert("由于github pages的资源限制，无法查询路由\n如需访问完整系统，请联系wth20@mails.tsinghua.edu.cn")
+					//getroute(src.value,des.value,'2021')
 				}
 
 			</script>
@@ -1077,65 +1166,51 @@
 				}
 				function criticals(ask)
 				{
-					$.ajax({
-	                url: 'http://127.0.0.1:5002/critical',
-	                data:{
-	                  name: ask
-	                },
-	                dataType: 'JSON',
-	                type: 'GET',
-	                success: function(data){
-	                	if(data['status'] == 'success')
-	                	{
-	                		//map.setStyle('mapbox://styles/mapbox/light-v10');
-	                		var matchExpression = ['match', ['get', 'iso_3166_1_alpha_3']];
-	                		var values = data['data']
-	                		values.forEach(function (row) {
-					            // Convert the range of data values to a suitable color
-					            var green = (1 - row['value']) * 205+50;
-					            var color = 'rgb(0, ' + green + ', 0)';
+					let text = load("dataset/critical/"+ask+".json");
+					var values = JSON.parse(text);
+	                var matchExpression = ['match', ['get', 'iso_3166_1_alpha_3']];
+	                values.forEach(function (row) {
+					    // Convert the range of data values to a suitable color
+					    var green = (1 - row['value']) * 205+50;
+					    var color = 'rgb(0, ' + green + ', 0)';
 
-					            matchExpression.push(row['code'], color);
-					        });
-					        // Last value is the default, used where there is no data
-        					matchExpression.push('rgba(0, 0, 0, 0)');
-        					if(map.getLayer('countries-join') == undefined)
-        					{
-        						map.addLayer(
-						            {
-						                'id': 'countries-join',
-						                'type': 'fill',
-						                'source': 'countries',
-						                'source-layer': 'country_boundaries',
-						                'paint': {
-						                    'fill-color': matchExpression
-						                }
-						            },
-						            'admin-1-boundary-bg'
-						        );
-        					}
-        					else
-        					{
-        						map.removeLayer('countries-join');
-        						map.addLayer(
-						            {
-						                'id': 'countries-join',
-						                'type': 'fill',
-						                'source': 'countries',
-						                'source-layer': 'country_boundaries',
-						                'paint': {
-						                    'fill-color': matchExpression
-						                }
-						            },
-						            'admin-1-boundary-bg'
-						        );
-        					}
+					    matchExpression.push(row['code'], color);
+					});
+					// Last value is the default, used where there is no data
+        			matchExpression.push('rgba(0, 0, 0, 0)');
+        			if(map.getLayer('countries-join') == undefined)
+        			{
+        				map.addLayer(
+						    {
+						        'id': 'countries-join',
+						        'type': 'fill',
+						        'source': 'countries',
+						        'source-layer': 'country_boundaries',
+						        'paint': {
+						            'fill-color': matchExpression
+						        }
+						    },
+						    'admin-1-boundary-bg'
+						);
+        			}
+        			else
+        			{
+        				map.removeLayer('countries-join');
+        				map.addLayer(
+						    {
+						        'id': 'countries-join',
+						        'type': 'fill',
+						        'source': 'countries',
+						        'source-layer': 'country_boundaries',
+						        'paint': {
+						            'fill-color': matchExpression
+						        }
+						    },
+						    'admin-1-boundary-bg'
+						);
+        			}
         					
-	                	}
-
-	                }
-	                });
-				}
+	            }
 
 			</script>
 			<script type="text/javascript">
@@ -1530,71 +1605,120 @@
 						{
 							descountry = e.features[0].properties.alpha3;								
 						}
-						$.ajax({
-		                url: 'http://127.0.0.1:5003/depend',
-		                data:{
-		                  src: srccountry,
-		                  des: descountry
-		                },
-		                dataType: 'JSON',
-		                type: 'GET',
-		                success: function(data){
-		                	if(data['status'] == 'success')
+						let text = load("dataset/dependence/dic.json");
+						var c2iso = JSON.parse(text);
+						text = load("dataset/dependence/rev.json");
+						var iso2c = JSON.parse(text);
+						if(descountry == 'none')
+						{
+							text = load("dataset/dependence/sn.json");
+							var sn = JSON.parse(text);
+							var srcc = iso2c[srccountry]
+							var data = []
+							for(var k in sn[srcc])
+	                		{
+	                			if(c2iso.hasOwnProperty(k))
+	                			{
+	                				data.push({'code':c2iso[k],'value':sn[srcc][k]})
+	                			}
+
+	                		}
+	                		if(map.getLayer('state-fills') != undefined)
 		                	{
-		                		if(map.getLayer('state-fills') != undefined)
-		                		{
-		                			map.removeLayer('state-fills');
-		                		}
-		                		if(map.getLayer('state-borders') != undefined)
-		                		{
-		                			map.removeLayer('state-borders');
-		                		}
-		                		//map.setStyle('mapbox://styles/mapbox/light-v10');
-		                		var matchExpression = ['match', ['get', 'iso_3166_1_alpha_3']];
-		                		var values = data['data']
-		                		values.forEach(function (row) {
-						            // Convert the range of data values to a suitable color
-						            var green = (1 - row['value']) * 205+50;
-						            var color =  'rgb(0,' + green + ', 0)';
-						            matchExpression.push(row['code'], color);
-						        });
-						        matchExpression.push(name, 'rgb(255,255, 255)');
-						        // Last value is the default, used where there is no data
-	        					matchExpression.push('rgba(0, 0, 0, 0)');
-	        					if(map.getLayer('countries-join') == undefined)
-	        					{
-	        						map.addLayer(
-							            {
-							                'id': 'countries-join',
-							                'type': 'fill',
-							                'source': 'countries',
-							                'source-layer': 'country_boundaries',
-							                'paint': {
-							                    'fill-color': matchExpression
-						                }
-						            },
-						            'admin-1-boundary-bg'
-						        );
-        					}
-        					else
-        					{
-        						map.removeLayer('countries-join');
-        						map.addLayer(
-						            {
-						                'id': 'countries-join',
-						                'type': 'fill',
-						                'source': 'countries',
-						                'source-layer': 'country_boundaries',
-						                'paint': {
-						                    'fill-color': matchExpression
-						                }
-						            },
-						            'admin-1-boundary-bg'
-						        );
-        					}
+		                		map.removeLayer('state-fills');
 		                	}
-		                }
-		                });
+		                	if(map.getLayer('state-borders') != undefined)
+		                	{
+		                		map.removeLayer('state-borders');
+		                	}
+		                	//map.setStyle('mapbox://styles/mapbox/light-v10');
+		                	var matchExpression = ['match', ['get', 'iso_3166_1_alpha_3']];
+		                	var values = data
+		                	values.forEach(function (row) {
+						           // Convert the range of data values to a suitable color
+						        var green = (1 - row['value']) * 205+50;
+						        var color =  'rgb(0,' + green + ', 0)';
+						        matchExpression.push(row['code'], color);
+						    });
+						    matchExpression.push(name, 'rgb(255,255, 255)');
+						     // Last value is the default, used where there is no data
+	        				matchExpression.push('rgba(0, 0, 0, 0)');
+	        				if(map.getLayer('countries-join') == undefined)
+	        				{
+	        					map.addLayer(
+							        {
+							            'id': 'countries-join',
+							            'type': 'fill',
+							            'source': 'countries',
+							            'source-layer': 'country_boundaries',
+							            'paint': {
+							                'fill-color': matchExpression
+						            }
+						        },
+						        'admin-1-boundary-bg'
+						     );
+	        				}
+						}
+						else
+						{
+							var srcc = iso2c[srccountry]
+							var desc = iso2c[descountry]
+							var key = srcc + '-' + desc
+							
+							for (var i=0;i<3;i++)
+							{
+								text = load("dataset/dependence/stv"+(i+1).toString()+".json");
+								var stv = JSON.parse(text);
+								if(stv.hasOwnProperty(key))
+								{
+									var data = []
+									for(var k in stv[key])
+			                		{
+			                			if(c2iso.hasOwnProperty(k))
+			                			{
+			                				data.push({'code':c2iso[k],'value':stv[key][k]})
+			                			}
+			                		}
+			                		if(map.getLayer('state-fills') != undefined)
+				                	{
+				                		map.removeLayer('state-fills');
+				                	}
+				                	if(map.getLayer('state-borders') != undefined)
+				                	{
+				                		map.removeLayer('state-borders');
+				                	}
+				                	//map.setStyle('mapbox://styles/mapbox/light-v10');
+				                	var matchExpression = ['match', ['get', 'iso_3166_1_alpha_3']];
+				                	var values = data
+				                	values.forEach(function (row) {
+								           // Convert the range of data values to a suitable color
+								        var green = (1 - row['value']) * 205+50;
+								        var color =  'rgb(0,' + green + ', 0)';
+								        matchExpression.push(row['code'], color);
+								    });
+								    matchExpression.push(name, 'rgb(255,255, 255)');
+								     // Last value is the default, used where there is no data
+			        				matchExpression.push('rgba(0, 0, 0, 0)');
+			        				if(map.getLayer('countries-join') == undefined)
+			        				{
+			        					map.addLayer(
+									        {
+									            'id': 'countries-join',
+									            'type': 'fill',
+									            'source': 'countries',
+									            'source-layer': 'country_boundaries',
+									            'paint': {
+									                'fill-color': matchExpression
+								            }
+								        },
+								        'admin-1-boundary-bg'
+								     );
+			        				}
+									break;
+								}
+							}
+						}
+						
 					});
 
 					map.addLayer({
