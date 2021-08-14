@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<!--
+	TXT by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>全球互联网路由态势感知平台</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="../assets/css/main.css" />
+	</head>
+	<body class="is-preload">
+		<div id="page-wrapper">
+
+			<!-- Header -->
+				<header id="header">
+					<div class="logo container">
+						<div>
+							<h1><a href="../index.html" id="logo">ITRANCS: </a></h1>
+							<p>Internet Topology and Routing Analysis for National Cyber Security</p>
+						</div>
+					</div>
+				</header>
+
+
+			<!-- Nav -->
+				<nav id="nav">
+					<ul>
+						<li><a href="../index.html">主页</a></li>
+						<li>
+							<a href="#">资源</a>
+							<ul>
+								<li><a href="../resource/lg_resource.html">探针资源</a></li>
+								<li><a href="../resource/data_resource.html">数据资源</a></li>
+								<li><a href="../resource/geolocation_resource.html">地理定位资源</a></li>
+							</ul>
+						</li>
+						<li class="current">
+							<a href="#">数据改进</a>
+							<ul>
+								<li><a href="#">全球互联网路由态势感知平台</a></li>
+							</ul>
+						</li>
+						<li>
+							<a href="#">互联网拓扑路由分析</a>
+							<ul>
+								<li><a href="../analysis/logic_analysis.html">逻辑空间分析</a></li>
+								<li><a href="../analysis/geography_analysis.html">地理空间分析</a></li>
+							</ul>
+						</li>
+						<li>
+							<a href="#">工具</a>
+						</li>
+						<li>
+							<a href="#">关于</a>
+						</li>
+					</ul>
+				</nav>
+
+			<!-- Main -->
+				<section id="main">
+					<div class="container">
+						<div class="row">
+							<div class="col-12">
+								<div class="content">
+
+									<!-- Content -->
+
+										<article class="box page-content">
+
+											<header>
+												<h2>全球互联网路由态势感知平台</h2>
+												
+											</header>
+
+											<section>
+												<p>
+													随着互联网在政治、经济、生活各个方面的作用日益重要，催生了很多对互联网大规模路由感知、分析的需求，以保障互联网的路由安全。然而对互联网进行大规模路由感知和分析并非易事，互联网规模庞大，其去中心化和分布式的架构，不存在中央控制器让我们能够获得整个互联网的拓扑和路由信息，我们必须根据目前测量得到的有限信息推断未知的拓扑和路由。<br>
+													本平台展示了我们对已知路由的数据收集和对未知路由的推测结果，输入需要查询的任意起点和终点的IP地址或者AS号，即可输出查询到的或者估算的路由。
+												</p>
+											</section>
+
+											<section>
+												起始AS/IP地址: <input type="text" id="src" size="30">
+												目的AS/IP地址: <input type="text" id="des" size="30">
+												<input type="button" value="查询" onclick="work();">
+												<h5>123</h5>
+											</section>
+
+											<section>
+												<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width=100%>
+	  												<circle cx="100" cy="50" r="40" stroke="black" stroke-width="2" fill="red" />
+	  												<circle cx="250" cy="50" r="40" stroke="black" stroke-width="2" fill="red" />
+	  												<text x="75" y="55" fill="white">AS174</text>
+	  												<text x="225" y="55" fill="white">AS4837</text>
+	  												<line x1="140" y1="50" x2="210" y2="50" style="stroke:rgb(255,0,0);stroke-width:2"/>
+												</svg>
+											</section>
+
+										</article>
+
+								</div>
+							</div>
+							
+
+							</div>
+						</div>
+					</div>
+				</section>
+
+			<!-- Footer -->
+				<footer id="footer">
+					<div class="container">
+						
+
+						<!-- Copyright -->
+							<div id="copyright">
+								<ul class="menu">
+									<li>&copy; Untitled. All rights reserved</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+								</ul>
+							</div>
+
+					</div>
+				</footer>
+
+		</div>
+
+		<!-- Scripts -->
+			<script src="../assets/js/jquery.min.js"></script>
+			<script src="../assets/js/jquery.dropotron.min.js"></script>
+			<script src="../assets/js/jquery.scrolly.min.js"></script>
+			<script src="../assets/js/browser.min.js"></script>
+			<script src="../assets/js/breakpoints.min.js"></script>
+			<script src="../assets/js/util.js"></script>
+			<script src="../assets/js/main.js"></script>
+
+			<script>
+				function work()
+				{
+				    src = document.getElementById('src').value;
+				    des = document.getElementById('des').value;
+				
+					$.ajax({
+					type: "POST",
+					url: "python/test.py",
+					data: { param: src}
+					}).done(function(o) {
+					    console.log(o);
+					    
+					});
+				}
+
+				
+
+			</script>
+
+	</body>
+</html>
