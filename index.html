@@ -763,10 +763,10 @@
 					if(checkIP(data))
 					{
 						var ind = data.split('.')[0];
-						var realind = parseInt(Number(ind)/50);
+						var realind = parseInt(Number(ind)/5);
 						realind = realind.toString();
 						//console.log(realind)
-						let text = load(realind+".txt");
+						let text = load("dataset/ip2geo/"+realind+".txt");
 						var lines = text.split("\n")
 						var lat = -1;
 						var lng = -1;
@@ -1665,9 +1665,9 @@
 							var desc = iso2c[descountry]
 							var key = srcc + '-' + desc
 							
-							for (var i=0;i<3;i++)
+							for (var i=0;i<16;i++)
 							{
-								text = load("stv"+(i+1).toString()+".json");
+								text = load("dataset/dependence/stv"+(i+1).toString()+".json");
 								var stv = JSON.parse(text);
 								if(stv.hasOwnProperty(key))
 								{
